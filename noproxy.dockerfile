@@ -48,10 +48,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         sed \
         ca-certificates \
         wget \
-        lsb-release
+        lsb-release \
+        qemu-user-static
 
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
+USER $USERNAME
+COPY --chown=${USERNAME}:${USERNAME} configure.sh /home/${USERNAME}/
+RUN chmod +x /home/${USERNAME}/configure.sh
 
 USER root
 RUN apt-get clean && \
