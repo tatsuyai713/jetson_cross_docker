@@ -50,7 +50,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         wget \
         lsb-release \
         qemu-user-static \
-        binfmt-support
+        binfmt-support \
+        qemu-system-arm
 
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
