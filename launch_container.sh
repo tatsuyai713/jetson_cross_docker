@@ -2,30 +2,13 @@
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
 
 
-NAME_IMAGE='jetson_cross_ws'
-
-if [ ! "$(docker image ls -q ${NAME_IMAGE})" ]; then
-	if [ ! $# -ne 1 ]; then
-		if [ "setup" = $1 ]; then
-			echo "Image ${NAME_IMAGE} does not exist."
-			echo 'Now building image without proxy...'
-			docker build --file=./noproxy.dockerfile -t $NAME_IMAGE . --build-arg UID=$(id -u) --build-arg GID=$(id -g) --build-arg UNAME=$USER
-			
-		else
-			echo "Docker image not found. Please setup first!"
-			exit
-		fi
-	else
-		echo "Docker image not found. Please setup first!"
-		exit
-  	fi
-fi
+NAME_IMAGE="jetson_cross_image_$USER"
 
 # Commit
 if [ ! $# -ne 1 ]; then
 	if [ "commit" = $1 ]; then
 		echo 'Now commiting docker container...'
-		docker commit jetson_cross_docker jetson_cross_ws:latest
+		docker commit jetson_cross_docker $NAME_IMAGE:latest
 		CONTAINER_ID=$(docker ps -a -f name=jetson_cross_docker --format "{{.ID}}")
 		docker rm $CONTAINER_ID
 		exit
@@ -58,7 +41,7 @@ DOCKER_OPT="${DOCKER_OPT} \
         --add-host `hostname`-Docker:127.0.1.1"
 
 # For nvidia-docker
-DOCKER_OPT="${DOCKER_OPT} --runtime=nvidia "
+DOCKER_OPT="${DOCKER_OPT} --runtime=nvidia  --gpus all "
 DOCKER_OPT="${DOCKER_OPT} --privileged -it "
 
 ## Allow X11 Connection
@@ -69,9 +52,8 @@ if [ ! "$CONTAINER_ID" ]; then
 		--volume=/dev:/dev:rw \
 		--shm-size=1gb \
 		--env=TERM=xterm-256color \
-		--net=host \
 		--name=${DOCKER_NAME} \
-		jetson_cross_ws:latest \
+		$NAME_IMAGE:latest \
 		bash
 else
 	docker start $CONTAINER_ID
